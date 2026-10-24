@@ -37,6 +37,20 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h.strip()]
 
+# Needed for forms (login, checkout) on the live HTTPS site, e.g. https://yourname.pythonanywhere.com
+CSRF_TRUSTED_ORIGINS = [f'https://{host}' for host in ALLOWED_HOSTS if host not in ('localhost', '127.0.0.1')]
+
+if not DEBUG:
+    # Production: HTTPS only (PythonAnywhere terminates SSL and forwards the original scheme)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SSL_REDIRECT', 'True') == 'True'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False  # pythonanywhere.com subdomains belong to other users
+    # ...so HSTS subdomains/preload don't apply to a *.pythonanywhere.com site
+    SILENCED_SYSTEM_CHECKS = ['security.W005', 'security.W021']
+
 
 # Application definition
 

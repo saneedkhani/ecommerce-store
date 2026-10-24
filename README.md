@@ -192,6 +192,14 @@ python manage.py test
 
 ---
 
+## Deployment
+
+The project is ready for free hosting on PythonAnywhere: one setup script creates the virtual environment,
+a production `.env` (new secret key, `DEBUG=False`, HTTPS-only cookies, HSTS), the database, static files
+and the demo store. See **[deploy/DEPLOY.md](deploy/DEPLOY.md)** for the 5-step guide.
+
+---
+
 ## REST API
 
 Base URL: `/api/`. Interactive docs: **`/api/docs/`** (Swagger UI) and **`/api/redoc/`** (ReDoc). Raw schema: `/api/schema/`.
