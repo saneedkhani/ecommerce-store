@@ -1,7 +1,11 @@
-"""Fill the store with a demo catalogue: categories, products with generated images, reviews and coupons.
+"""Fill the store with a demo catalogue: categories, products with photos, reviews and coupons.
 
-    python manage.py seed_demo          # create or update the demo data
-    python manage.py seed_demo --reset  # delete ALL products and categories first
+    python manage.py seed_demo                   # create or update the demo data
+    python manage.py seed_demo --refresh-images  # replace demo product images with the bundled photos
+    python manage.py seed_demo --reset           # delete ALL products and categories first
+
+Product photos live in products/demo_images/ (Unsplash License, see CREDITS.md there).
+If a photo is missing, a simple generated image is used instead.
 """
 import random
 from decimal import Decimal
@@ -78,6 +82,22 @@ PRODUCTS = [
      'Rules for focused success in a distracted world, by Cal Newport.'),
 ]
 
+DEMO_IMAGE_DIR = Path(__file__).resolve().parents[2] / 'demo_images'
+DEMO_IMAGES = {
+    'AirWave Pro Wireless Headphones': 'headphones', 'Nova X5 Smartphone 128GB': 'phone',
+    'PulseFit Smart Watch': 'watch', 'ThinBook 14 Laptop (i5, 16GB)': 'laptop',
+    'Classic Leather Backpack': 'backpack', 'Urban Runner Sneakers': 'sneakers',
+    'Everyday Cotton T-Shirt (Pack of 3)': 'tshirt', 'Aviator Sunglasses UV400': 'sunglasses',
+    'BrewMaster Coffee Maker': 'coffee', 'Ceramic Non-Stick Cookware Set': 'cookware',
+    'Aroma Scented Candle Trio': 'candle', 'Indoor Potted Plant (Snake Plant)': 'plant',
+    'Glow Vitamin C Serum 30ml': 'serum', 'Signature Eau de Parfum 100ml': 'perfume',
+    'Matte Lipstick Collection': 'lipstick', 'Hydrating Face Mask (Pack of 10)': 'facemask',
+    'ProGrip Yoga Mat 6mm': 'yoga', 'Adjustable Dumbbell Set 20kg': 'dumbbell',
+    'Trail Mountain Bike 27.5"': 'bike', 'Insulated Water Bottle 1L': 'bottle',
+    'Atomic Habits (Paperback)': 'atomic', 'Python Crash Course, 3rd Edition': 'python',
+    'The Psychology of Money': 'money', 'Deep Work (Paperback)': 'deepwork',
+}
+
 REVIEWERS = [('ayesha_k', 'Ayesha'), ('bilal_r', 'Bilal'), ('hina_s', 'Hina'), ('usman_t', 'Usman'),
              ('sara_m', 'Sara'), ('ali_h', 'Ali')]
 COMMENTS = {
@@ -92,6 +112,14 @@ COUPONS = [
     ('SAVE500', Coupon.FIXED, 500, 3000, None),
     ('FLASH20', Coupon.PERCENT, 20, 10000, 100),
 ]
+
+
+def product_image(name, emoji, colours):
+    """The bundled photo for this product, or a generated placeholder if it's missing."""
+    photo = DEMO_IMAGE_DIR / f'{DEMO_IMAGES.get(name, "")}.jpg'
+    if photo.is_file():
+        return ContentFile(photo.read_bytes())
+    return make_image(emoji, colours)
 
 
 def make_image(emoji, colours, size=800):
@@ -127,10 +155,12 @@ def make_image(emoji, colours, size=800):
 
 
 class Command(BaseCommand):
-    help = 'Create a demo catalogue (categories, products with images, reviews and coupon codes).'
+    help = 'Create a demo catalogue (categories, products with photos, reviews and coupon codes).'
 
     def add_arguments(self, parser):
         parser.add_argument('--reset', action='store_true', help='Delete ALL products and categories first')
+        parser.add_argument('--refresh-images', action='store_true',
+                            help='Replace the images of demo products with the bundled photos')
 
     def handle(self, *args, **options):
         random.seed(42)  # same demo data every time
@@ -160,9 +190,11 @@ class Command(BaseCommand):
                 'category': categories[category], 'description': description, 'price': Decimal(price),
                 'sale_price': Decimal(sale) if sale else None, 'stock': stock, 'is_featured': featured,
             })
-            if created or not product.image:
+            if created or not product.image or options['refresh_images']:
+                if product.image:
+                    product.image.delete(save=False)  # remove the old file from media/
                 slug = categories[category].slug + '-' + str(product.pk)
-                product.image.save(f'{slug}.jpg', make_image(emoji, colours[category]), save=True)
+                product.image.save(f'{slug}.jpg', product_image(name, emoji, colours[category]), save=True)
 
             if not product.reviews.exists():
                 for user in random.sample(reviewers, random.randint(2, 5)):

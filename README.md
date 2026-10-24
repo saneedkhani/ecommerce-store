@@ -78,7 +78,7 @@ Built by **Saneed Ullah** as a portfolio project after completing the
 | API docs | drf-spectacular (OpenAPI 3, Swagger UI, ReDoc) |
 | Database | SQLite (development) |
 | Frontend | Django Templates, Bootstrap 5.3, Bootstrap Icons, Chart.js, vanilla JavaScript |
-| Images | Pillow (product images, profile pictures, payment proofs, generated demo images) |
+| Images | Pillow (product images, profile pictures, payment proofs); demo photos from Unsplash |
 
 ---
 
@@ -169,9 +169,13 @@ python manage.py migrate
 python manage.py createsuperuser
 python manage.py seed_demo
 ```
-`seed_demo` creates 6 categories, 24 products with generated images, sample reviews and three coupon codes:
+`seed_demo` creates 6 categories, 24 products with real product photos, sample reviews and three coupon codes:
 **WELCOME10** (10% off), **SAVE500** (Rs. 500 off orders over Rs. 3,000) and **FLASH20** (20% off orders over Rs. 10,000).
-Run it again any time; it never duplicates data. `python manage.py seed_demo --reset` deletes all products first.
+Run it again any time; it never duplicates data. `python manage.py seed_demo --refresh-images` re-applies the photos,
+and `python manage.py seed_demo --reset` deletes all products first.
+
+Demo photos are from [Unsplash](https://unsplash.com) (Unsplash License); photographers are credited in
+[`products/demo_images/CREDITS.md`](products/demo_images/CREDITS.md).
 
 ### 6. Run the server
 ```bash
