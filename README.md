@@ -9,6 +9,8 @@ with sales charts, order management and payment verification. Every feature is a
 Built by **Saneed Ullah** as a portfolio project after completing the
 [Meta Back-End Developer Professional Certificate](https://coursera.org/verify/professional-cert/4W3OG3MVRKBW).
 
+**Live demo:** https://djangodev.pythonanywhere.com · **API docs:** https://djangodev.pythonanywhere.com/api/docs/
+
 ![Home page](docs/screenshots/home.jpg)
 
 | Shop with filters | Product page |
