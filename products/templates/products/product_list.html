@@ -1,26 +1,92 @@
 {% extends 'base.html' %}
-{% block title %}All Products{% endblock %}
+{% block title %}{% if category %}{{ category.name }}{% elif q %}Search: {{ q }}{% else %}All products{% endif %}{% endblock %}
 
 {% block content %}
-<h1 class="mb-4 fw-bold">Explore Products</h1>
+<div class="page-head">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+            {% if category %}<li class="breadcrumb-item"><a href="{% url 'products:product_list' %}">Shop</a></li><li class="breadcrumb-item active">{{ category.name }}</li>
+            {% else %}<li class="breadcrumb-item active">Shop</li>{% endif %}
+        </ol></nav>
+        <h1 class="h3 fw-bold mb-1">
+            {% if category %}{{ category.name }}{% elif q %}Results for "{{ q }}"{% elif request.GET.on_sale %}Deals &amp; discounts{% else %}All products{% endif %}
+        </h1>
+        <p class="text-muted mb-0">{% if category.description %}{{ category.description }}{% else %}{{ page_obj.paginator.count }} product{{ page_obj.paginator.count|pluralize }} found{% endif %}</p>
+    </div>
+</div>
 
-<div class="row g-4">
-    {% for product in products %}
-    <div class="col-6 col-md-4 col-lg-3">
-        <div class="card h-100 product-card">
-            <a href="{% url 'products:product_detail' product.pk %}">
-                {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                {% endif %}
-            </a>
-            <div class="card-body">
-                <h6 class="card-title text-truncate">{{ product.name }}</h6>
-                <p class="fw-bold mb-0" style="color:#ff4d6d;">Rs. {{ product.price }}</p>
+<div class="container py-4 py-lg-5">
+    <div class="row g-4">
+        <aside class="col-lg-3">
+            <button class="btn btn-light w-100 d-lg-none mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#filters"><i class="bi bi-sliders me-1"></i> Filters</button>
+            <div class="collapse d-lg-block" id="filters">
+                <div class="filter-card">
+                    <h6>Categories</h6>
+                    <a class="filter-link {% if not category %}active{% endif %}" href="{% url 'products:product_list' %}{% url_with page=None %}">All products</a>
+                    {% for cat in categories %}
+                        <a class="filter-link {% if category.slug == cat.slug %}active{% endif %}" href="{% url 'products:category' cat.slug %}{% url_with page=None %}">
+                            <span><i class="bi {{ cat.icon }} me-2"></i>{{ cat.name }}</span>
+                        </a>
+                    {% endfor %}
+
+                    <form method="get" class="mt-4">
+                        {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+                        <input type="hidden" name="sort" value="{{ sort }}">
+                        <h6>Price (Rs.)</h6>
+                        <div class="d-flex gap-2 align-items-center mb-3">
+                            <input class="form-control form-control-sm" type="number" name="min_price" min="0" value="{{ min_price }}" placeholder="Min">
+                            <span class="text-muted">–</span>
+                            <input class="form-control form-control-sm" type="number" name="max_price" min="0" value="{{ max_price }}" placeholder="Max">
+                        </div>
+                        <h6>Availability</h6>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="checkbox" name="on_sale" value="1" id="f-sale" {% if request.GET.on_sale %}checked{% endif %}>
+                            <label class="form-check-label" for="f-sale">On sale</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="in_stock" value="1" id="f-stock" {% if request.GET.in_stock %}checked{% endif %}>
+                            <label class="form-check-label" for="f-stock">In stock only</label>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Apply filters</button>
+                        <a class="btn btn-link w-100 text-muted btn-sm mt-1" href="{% if category %}{% url 'products:category' category.slug %}{% else %}{% url 'products:product_list' %}{% endif %}">Clear all</a>
+                    </form>
+                </div>
             </div>
+        </aside>
+
+        <div class="col-lg-9">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="d-flex flex-wrap gap-2">
+                    {% if q %}<a class="chip" href="{% url_with q=None page=None %}">"{{ q }}" <i class="bi bi-x"></i></a>{% endif %}
+                    {% if min_price or max_price %}<a class="chip" href="{% url_with min_price=None max_price=None page=None %}">Rs. {{ min_price|default:"0" }} – {{ max_price|default:"any" }} <i class="bi bi-x"></i></a>{% endif %}
+                    {% if request.GET.on_sale %}<a class="chip" href="{% url_with on_sale=None page=None %}">On sale <i class="bi bi-x"></i></a>{% endif %}
+                    {% if request.GET.in_stock %}<a class="chip" href="{% url_with in_stock=None page=None %}">In stock <i class="bi bi-x"></i></a>{% endif %}
+                    <span class="text-muted small align-self-center">Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }}</span>
+                </div>
+                <form method="get" class="d-flex align-items-center gap-2">
+                    {% for key, value in request.GET.items %}{% if key != 'sort' and key != 'page' %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}{% endfor %}
+                    <label class="small text-muted text-nowrap" for="sort">Sort by</label>
+                    <select class="form-select form-select-sm" id="sort" name="sort" onchange="this.form.submit()" style="min-width:190px">
+                        {% for key, label in sort_options.items %}<option value="{{ key }}" {% if key == sort %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                    </select>
+                </form>
+            </div>
+
+            {% if page_obj.object_list %}
+                <div class="row g-3 g-md-4">
+                    {% for product in page_obj %}<div class="col-6 col-md-4">{% include 'partials/product_card.html' %}</div>{% endfor %}
+                </div>
+                {% include 'partials/pagination.html' %}
+            {% else %}
+                <div class="empty-state panel">
+                    <i class="bi bi-search"></i>
+                    <h5 class="text-dark">No products match your filters</h5>
+                    <p>Try a different search or remove some filters.</p>
+                    <a class="btn btn-primary" href="{% url 'products:product_list' %}">Browse all products</a>
+                </div>
+            {% endif %}
         </div>
     </div>
-    {% empty %}
-    <p>No products available.</p>
-    {% endfor %}
 </div>
 {% endblock %}

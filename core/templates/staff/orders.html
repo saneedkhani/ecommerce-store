@@ -1,0 +1,50 @@
+{% extends 'staff_base.html' %}
+{% block title %}Orders{% endblock %}
+{% block heading %}Orders{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div class="status-tabs d-flex flex-wrap gap-1">
+        <a href="?{% if q %}q={{ q }}{% endif %}" class="{% if not status %}active{% endif %}">All</a>
+        {% for key, label in status_choices %}
+            <a href="?status={{ key }}{% if q %}&q={{ q }}{% endif %}" class="{% if status == key %}active{% endif %}">{{ label }} <span class="text-muted">{{ status_counts|get_item:key|default:0 }}</span></a>
+        {% endfor %}
+    </div>
+    <form method="get" class="d-flex gap-2">
+        {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+        <input class="form-control form-control-sm" type="search" name="q" value="{{ q }}" placeholder="Search # / name / username">
+        <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-search"></i></button>
+    </form>
+</div>
+
+<div class="table-wrap">
+    <table class="table table-clean">
+        <thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Total</th><th>Payment</th><th>Status</th><th style="width:230px">Update status</th></tr></thead>
+        <tbody>
+        {% for order in page_obj %}
+            <tr>
+                <td class="fw-semibold">#{{ order.id }}</td>
+                <td>{{ order.full_name }}<div class="small text-muted">@{{ order.user.username }} · {{ order.phone_number }}</div></td>
+                <td class="small text-muted">{{ order.created_at|date:"M j, Y g:i A" }}</td>
+                <td class="fw-semibold">{{ order.total_price|money }}{% if order.coupon_code %}<div class="small text-success">{{ order.coupon_code }}</div>{% endif %}</td>
+                <td class="small">{% if order.payment %}{{ order.payment.get_status_display }}{% else %}<span class="text-muted">None</span>{% endif %}</td>
+                <td><span class="status status-{{ order.status_color }}">{{ order.get_status_display }}</span></td>
+                <td>
+                    <form method="post" action="{% url 'core:staff_update_order' order.id %}" class="d-flex gap-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <select name="status" class="form-select form-select-sm">
+                            {% for key, label in status_choices %}<option value="{{ key }}" {% if key == order.status %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                        </select>
+                        <button class="btn btn-primary btn-sm" type="submit">Save</button>
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="7" class="text-center text-muted py-5">No orders found.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include 'partials/pagination.html' %}
+{% endblock %}

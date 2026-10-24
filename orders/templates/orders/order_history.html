@@ -1,37 +1,51 @@
 {% extends 'base.html' %}
-{% block title %}My Orders{% endblock %}
+{% block title %}My orders{% endblock %}
 
 {% block content %}
-<h1 class="fw-bold mb-4">My Orders</h1>
-
-{% if orders %}
-<div class="table-responsive">
-<table class="table table-dark table-hover align-middle">
-    <thead>
-        <tr><th>Order #</th><th>Status</th><th>Total</th><th>Date</th><th></th></tr>
-    </thead>
-    <tbody>
-    {% for order in orders %}
-    <tr>
-        <td>#{{ order.id }}</td>
-        <td>
-            <span class="badge
-                {% if order.status == 'delivered' %}bg-success
-                {% elif order.status == 'cancelled' %}bg-danger
-                {% elif order.status == 'processing' %}bg-warning text-dark
-                {% else %}bg-secondary{% endif %}">
-                {{ order.get_status_display }}
-            </span>
-        </td>
-        <td>Rs. {{ order.total_price }}</td>
-        <td>{{ order.created_at|date:"M d, Y" }}</td>
-        <td><a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-outline-light">View</a></td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+<div class="page-head">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li><li class="breadcrumb-item"><a href="{% url 'accounts:profile' %}">Account</a></li><li class="breadcrumb-item active">Orders</li></ol></nav>
+        <h1 class="h3 fw-bold mb-0">My orders</h1>
+    </div>
 </div>
-{% else %}
-<p class="text-secondary">No orders yet. <a href="{% url 'products:product_list' %}">Start shopping →</a></p>
-{% endif %}
+
+<div class="container py-5">
+    <div class="status-tabs mb-3 d-flex flex-wrap gap-1 bg-alt p-1 rounded-3" style="width:fit-content">
+        <a href="?" class="{% if not status %}active{% endif %}">All</a>
+        {% for key, label in status_choices %}<a href="?status={{ key }}" class="{% if status == key %}active{% endif %}">{{ label }}</a>{% endfor %}
+    </div>
+
+    {% if page_obj.object_list %}
+        <div class="table-wrap">
+            <table class="table table-clean">
+                <thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th>Payment</th><th></th></tr></thead>
+                <tbody>
+                {% for order in page_obj %}
+                    <tr>
+                        <td class="fw-semibold">#{{ order.id }}</td>
+                        <td class="text-muted">{{ order.created_at|date:"M j, Y" }}</td>
+                        <td>{{ order.item_count }}</td>
+                        <td class="fw-semibold">{{ order.total_price|money }}</td>
+                        <td><span class="status status-{{ order.status_color }}">{{ order.get_status_display }}</span></td>
+                        <td>
+                            {% if order.payment %}<span class="small text-muted">{{ order.payment.get_status_display }}</span>
+                            {% elif order.status == 'pending' %}<a href="{% url 'payments:submit_payment' order.id %}" class="small fw-semibold">Pay now</a>
+                            {% else %}<span class="small text-muted">–</span>{% endif %}
+                        </td>
+                        <td class="text-end"><a href="{% url 'orders:order_detail' order.id %}" class="btn btn-light btn-sm">Details</a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include 'partials/pagination.html' %}
+    {% else %}
+        <div class="empty-state panel">
+            <i class="bi bi-box-seam"></i>
+            <h5 class="text-dark">No orders {% if status %}with this status{% else %}yet{% endif %}</h5>
+            <p>When you place an order it will show up here.</p>
+            <a class="btn btn-primary" href="{% url 'products:product_list' %}">Start shopping</a>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

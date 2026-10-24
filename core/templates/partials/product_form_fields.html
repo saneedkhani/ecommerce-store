@@ -1,0 +1,11 @@
+{% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors|striptags }}</div>{% endif %}
+<div class="row g-3">
+    <div class="col-md-8"><label class="form-label" for="{{ form.name.id_for_label }}">Name</label>{{ form.name }}{% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    <div class="col-md-4"><label class="form-label" for="{{ form.category.id_for_label }}">Category</label>{{ form.category }}</div>
+    <div class="col-12"><label class="form-label" for="{{ form.description.id_for_label }}">Description</label>{{ form.description }}</div>
+    <div class="col-md-4"><label class="form-label" for="{{ form.price.id_for_label }}">Price (Rs.)</label>{{ form.price }}{% for e in form.price.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    <div class="col-md-4"><label class="form-label" for="{{ form.sale_price.id_for_label }}">Sale price (optional)</label>{{ form.sale_price }}{% for e in form.sale_price.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    <div class="col-md-4"><label class="form-label" for="{{ form.stock.id_for_label }}">Stock</label>{{ form.stock }}</div>
+    <div class="col-md-8"><label class="form-label" for="{{ form.image.id_for_label }}">Image</label>{{ form.image }}</div>
+    <div class="col-md-4 d-flex align-items-end"><div class="form-check mb-2">{{ form.is_featured }}<label class="form-check-label ms-1" for="{{ form.is_featured.id_for_label }}">{{ form.is_featured.label }}</label></div></div>
+</div>

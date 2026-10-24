@@ -1,87 +1,155 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}My Store{% endblock %}</title>
+    <title>{% block title %}ShopWave{% endblock %} · ShopWave</title>
+    <meta name="description" content="{% block meta_description %}ShopWave: electronics, fashion, home and more with fast delivery and secure payments.{% endblock %}">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background-color:#12121a; border-bottom:1px solid #2a2a35;">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="{% url 'core:home' %}">
-            <span style="color:#ff4d6d;">Shop</span>Wave
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navMenu">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="{% url 'products:product_list' %}">Products</a></li>
+<div class="topbar">
+    <div class="container d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-truck me-1"></i> Free delivery on orders over Rs. 5,000</span>
+        <span class="d-none d-md-inline">New here? Use code <strong>WELCOME10</strong> for 10% off your first order</span>
+    </div>
+</div>
+
+<header class="site-header">
+    <nav class="navbar">
+        <div class="container gap-3 flex-nowrap">
+            <a class="brand me-lg-3" href="{% url 'core:home' %}"><span>Shop</span>Wave</a>
+
+            <form class="header-search d-none d-md-flex" action="{% url 'products:product_list' %}" method="get" role="search">
+                <input class="form-control" type="search" name="q" value="{{ request.GET.q }}" placeholder="Search products, brands and categories" aria-label="Search">
+                <button class="btn btn-primary" type="submit" aria-label="Search"><i class="bi bi-search"></i></button>
+            </form>
+
+            <div class="d-flex align-items-center gap-1 ms-auto">
+                <a class="header-icon d-md-none" href="{% url 'products:product_list' %}" aria-label="Search"><i class="bi bi-search"></i></a>
+                <a class="header-icon" href="{% url 'products:wishlist' %}" aria-label="Wishlist" title="Wishlist">
+                    <i class="bi bi-heart"></i>
+                    <span class="count {% if not wishlist_ids %}d-none{% endif %}" id="wishlist-count">{{ wishlist_ids|length }}</span>
+                </a>
+                <a class="header-icon" href="{% url 'cart:cart_detail' %}" aria-label="Cart" title="Cart">
+                    <i class="bi bi-bag"></i>
+                    {% if cart_count %}<span class="count">{{ cart_count }}</span>{% endif %}
+                </a>
+
                 {% if user.is_authenticated %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'cart:cart_detail' %}"><i class="bi bi-cart3"></i> Cart</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'orders:order_history' %}">My Orders</a></li>
-                {% endif %}
-                {% if user.is_staff %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'payments:dashboard' %}">
-                            Payments <span id="pending-badge" class="badge rounded-pill" style="background-color:#ff4d6d;"></span>
+                    <div class="dropdown">
+                        <a class="header-icon d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if user.profile_picture %}
+                                <img src="{{ user.profile_picture.url }}" class="avatar" style="width:32px;height:32px" alt="">
+                            {% else %}
+                                <span class="avatar" style="width:32px;height:32px;font-size:.85rem">{{ user.username|first|upper }}</span>
+                            {% endif %}
+                            <span class="d-none d-lg-inline fs-6 fw-semibold">{{ user.first_name|default:user.username }}</span>
                         </a>
-                    </li>
-                {% endif %}
-            </ul>
-            {% if user.is_staff %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'core:admin_dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'payments:dashboard' %}">
-                        Payments <span id="pending-badge" class="badge rounded-pill" style="background-color:#ff4d6d;"></span>
-                    </a>
-                </li>
-            {% endif %}
-            <ul class="navbar-nav">
-                {% if user.is_authenticated %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}"><i class="bi bi-person-circle"></i> {{ user.username }}</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            {% if user.is_staff %}
+                                <li><a class="dropdown-item" href="{% url 'core:admin_dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>Staff dashboard</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>My account</a></li>
+                            <li><a class="dropdown-item" href="{% url 'orders:order_history' %}"><i class="bi bi-box-seam me-2"></i>My orders</a></li>
+                            <li><a class="dropdown-item" href="{% url 'products:wishlist' %}"><i class="bi bi-heart me-2"></i>Wishlist</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}
+                                    <button class="dropdown-item text-danger" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Log out</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
                 {% else %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}">Login</a></li>
-                    <li class="nav-item">
-                        <a class="btn btn-sm ms-2" style="background-color:#ff4d6d; color:white;" href="{% url 'accounts:signup' %}">Sign Up</a>
-                    </li>
+                    <a class="btn btn-light btn-sm ms-2 d-none d-sm-inline-block" href="{% url 'accounts:login' %}">Log in</a>
+                    <a class="btn btn-primary btn-sm ms-1" href="{% url 'accounts:signup' %}">Sign up</a>
                 {% endif %}
-            </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="category-nav d-none d-sm-block">
+        <div class="container scroller">
+            <a href="{% url 'products:product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' and not request.GET.on_sale %}active{% endif %}">All products</a>
+            {% for cat in nav_categories %}
+                <a href="{% url 'products:category' cat.slug %}" class="{% if category.slug == cat.slug %}active{% endif %}">{{ cat.name }}</a>
+            {% endfor %}
+            <a href="{% url 'products:product_list' %}?on_sale=1" class="text-danger fw-semibold {% if request.GET.on_sale %}active{% endif %}"><i class="bi bi-lightning-charge-fill"></i> Sale</a>
         </div>
     </div>
-</nav>
+</header>
 
-<main class="container py-4" style="min-height:80vh;">
-    {% for message in messages %}
-        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    {% endfor %}
-    {% block content %}
-    {% endblock %}
+{% if messages %}
+    <div class="flash-stack">
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<main>
+    {% block content %}{% endblock %}
 </main>
 
-<footer class="text-center py-4 mt-5" style="background-color:#12121a; border-top:1px solid #2a2a35;">
-    <p class="mb-0 text-secondary">&copy; 2026 ShopWave. All rights reserved.</p>
+<footer class="site-footer">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <a class="brand" href="{% url 'core:home' %}"><span>Shop</span>Wave</a>
+                <p class="mt-3 mb-4" style="max-width:320px">Quality products, honest prices and fast delivery across Pakistan. Shop with confidence.</p>
+                <div class="d-flex gap-3 fs-5">
+                    <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                    <a href="#" aria-label="X"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                </div>
+            </div>
+            <div class="col-6 col-lg-2">
+                <h6>Shop</h6>
+                <a href="{% url 'products:product_list' %}">All products</a>
+                {% for cat in nav_categories|slice:":4" %}<a href="{% url 'products:category' cat.slug %}">{{ cat.name }}</a>{% endfor %}
+                <a href="{% url 'products:product_list' %}?on_sale=1">Sale</a>
+            </div>
+            <div class="col-6 col-lg-2">
+                <h6>Account</h6>
+                <a href="{% url 'accounts:profile' %}">My account</a>
+                <a href="{% url 'orders:order_history' %}">Track orders</a>
+                <a href="{% url 'products:wishlist' %}">Wishlist</a>
+                <a href="{% url 'cart:cart_detail' %}">Cart</a>
+            </div>
+            <div class="col-lg-4 newsletter">
+                <h6>Get deals in your inbox</h6>
+                <p class="small">Subscribe for new arrivals and members-only discounts.</p>
+                <form class="d-flex gap-2" onsubmit="event.preventDefault(); this.innerHTML='<span class=\'text-white\'>Thanks for subscribing!</span>';">
+                    <input class="form-control" type="email" placeholder="Your email" required aria-label="Email">
+                    <button class="btn btn-primary" type="submit">Subscribe</button>
+                </form>
+                <div class="d-flex gap-3 mt-4 fs-3 text-white-50">
+                    <i class="bi bi-bank" title="Bank transfer"></i><i class="bi bi-shield-check" title="Secure"></i><i class="bi bi-truck" title="Delivery"></i>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between gap-2">
+            <span>&copy; 2026 ShopWave. All rights reserved.</span>
+            <span>Built with Django &amp; Django REST Framework · <a class="d-inline" href="/api/docs/">API docs</a></span>
+        </div>
+    </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{% static 'js/script.js' %}"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>
-
-
-
-
-
-

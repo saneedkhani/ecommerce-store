@@ -1,30 +1,59 @@
 {% extends 'base.html' %}
-{% block title %}Complete Payment{% endblock %}
+{% block title %}Pay for order #{{ order.id }}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card p-4">
-            <h2 class="fw-bold mb-3">Complete Your Payment</h2>
+<div class="page-head">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'orders:order_history' %}">My orders</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'orders:order_detail' order.id %}">#{{ order.id }}</a></li>
+            <li class="breadcrumb-item active">Payment</li>
+        </ol></nav>
+        <h1 class="h3 fw-bold mb-0">Complete your payment</h1>
+    </div>
+</div>
 
-            <div class="p-3 mb-4 rounded-3" style="background-color:#1a1a22; border:1px solid #2a2a35;">
-                <p class="mb-1"><strong>Account Title:</strong> {{ bank_details.account_title }}</p>
-                <p class="mb-1"><strong>Account Number:</strong> {{ bank_details.account_number }}</p>
-                <p class="mb-1"><strong>Bank:</strong> {{ bank_details.bank_name }}</p>
-                <p class="mb-0"><strong>Amount:</strong> <span style="color:#ff4d6d;">Rs. {{ order.total_price }}</span></p>
+<div class="container py-5">
+    <div class="row g-4 justify-content-center">
+        <div class="col-lg-5">
+            <div class="panel h-100">
+                <div class="panel-title"><span class="badge rounded-pill bg-primary me-2">1</span>Transfer to this account</div>
+                <div class="rounded-4 p-4 text-white mb-3" style="background:linear-gradient(135deg,#4f46e5,#7c3aed)">
+                    <div class="d-flex justify-content-between align-items-start mb-4"><i class="bi bi-bank fs-2"></i><span class="small opacity-75">Bank transfer</span></div>
+                    <div class="small opacity-75">Account title</div>
+                    <div class="fw-semibold mb-2">{{ bank_details.account_title }}</div>
+                    <div class="small opacity-75">Account number / IBAN</div>
+                    <div class="fw-bold fs-5 mb-2" style="letter-spacing:.06em">{{ bank_details.account_number }}</div>
+                    <div class="small opacity-75">Bank</div>
+                    <div class="fw-semibold">{{ bank_details.bank_name }}</div>
+                </div>
+                <div class="summary-row"><span>Order</span><strong>#{{ order.id }}</strong></div>
+                <div class="summary-total"><span>Amount</span><span>{{ order.total_price|money }}</span></div>
+                <p class="small text-muted mt-3 mb-0"><i class="bi bi-info-circle"></i> Please write <strong>Order #{{ order.id }}</strong> in the transfer description.</p>
             </div>
-
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                {% for field in form %}
+        </div>
+        <div class="col-lg-5">
+            <div class="panel h-100">
+                <div class="panel-title"><span class="badge rounded-pill bg-primary me-2">2</span>Upload your payment proof</div>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors|striptags }}</div>{% endif %}
                     <div class="mb-3">
-                        <label class="form-label">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+                        <label class="form-label" for="{{ form.bank_reference.id_for_label }}">{{ form.bank_reference.label }}</label>
+                        {{ form.bank_reference }}
                     </div>
-                {% endfor %}
-                <button type="submit" class="btn w-100" style="background-color:#ff4d6d; color:white;">Submit Payment Proof</button>
-            </form>
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.proof_screenshot.id_for_label }}">{{ form.proof_screenshot.label }}</label>
+                        {{ form.proof_screenshot }}
+                        <small class="text-muted">A clear photo or screenshot of the transfer receipt.</small>
+                    </div>
+                    <button class="btn btn-primary btn-lg w-100" type="submit"><i class="bi bi-upload me-1"></i> Submit payment</button>
+                </form>
+                <ul class="info-list mt-4">
+                    <li><i class="bi bi-clock-history"></i> We usually verify payments within a few hours.</li>
+                    <li><i class="bi bi-bell"></i> Track the status anytime on your order page.</li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>

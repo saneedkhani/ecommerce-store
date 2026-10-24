@@ -1,33 +1,123 @@
 {% extends 'base.html' %}
-{% block title %}Home{% endblock %}
+{% block title %}Shop electronics, fashion &amp; more{% endblock %}
 
 {% block content %}
-<div class="text-center py-5 mb-5 rounded-4" style="background: linear-gradient(135deg, #1a1a22, #2a1520); border:1px solid #2a2a35;">
-    <h1 class="display-4 fw-bold">Welcome to <span style="color:#ff4d6d;">ShopWave</span></h1>
-    <p class="text-secondary fs-5">Discover products you'll love, delivered to your door.</p>
-    <a href="{% url 'products:product_list' %}" class="btn btn-lg mt-3" style="background-color:#ff4d6d; color:white;">
-        Shop Now <i class="bi bi-arrow-right"></i>
-    </a>
-</div>
-
-<h2 class="fw-bold mb-4">Featured Products</h2>
-<div class="row g-4">
-    {% for product in products %}
-    <div class="col-6 col-md-4 col-lg-3">
-        <div class="card h-100 product-card">
-            <a href="{% url 'products:product_detail' product.pk %}">
-                {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                {% endif %}
-            </a>
-            <div class="card-body">
-                <h6 class="card-title text-truncate">{{ product.name }}</h6>
-                <p class="fw-bold mb-0" style="color:#ff4d6d;">Rs. {{ product.price }}</p>
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="hero-badge"><i class="bi bi-stars"></i> New season collection is here</span>
+                <h1 class="mt-3 mb-3">Everything you love,<br>delivered to your door.</h1>
+                <p class="lead mb-4">Discover top brands in electronics, fashion, home and beauty. Great prices, real reviews and secure payments.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'products:product_list' %}" class="btn btn-primary btn-lg">Shop now <i class="bi bi-arrow-right ms-1"></i></a>
+                    <a href="{% url 'products:product_list' %}?on_sale=1" class="btn btn-light btn-lg"><i class="bi bi-lightning-charge-fill text-danger me-1"></i> View deals</a>
+                </div>
+                <div class="d-flex gap-4 mt-4 pt-2">
+                    <div><div class="fw-bold fs-4">{{ categories|length }}+</div><small class="text-muted">Categories</small></div>
+                    <div><div class="fw-bold fs-4">4.8<i class="bi bi-star-fill text-warning fs-6 ms-1"></i></div><small class="text-muted">Customer rating</small></div>
+                    <div><div class="fw-bold fs-4">24h</div><small class="text-muted">Fast dispatch</small></div>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="hero-art">
+                    {% if hero and hero.image %}<img src="{{ hero.image.url }}" alt="{{ hero.name }}">
+                    {% else %}<div class="img-placeholder" style="border-radius:28px"><i class="bi bi-bag-heart"></i></div>{% endif %}
+                    <div class="floating" style="left:-28px;bottom:48px"><i class="bi bi-truck text-primary me-2"></i>Free delivery over Rs. 5,000</div>
+                    <div class="floating" style="right:-16px;top:36px"><i class="bi bi-shield-check text-success me-2"></i>Secure checkout</div>
+                </div>
             </div>
         </div>
     </div>
-    {% empty %}
-    <p class="text-secondary">No products yet.</p>
-    {% endfor %}
-</div>
+</section>
+
+<section class="perks">
+    <div class="container">
+        <div class="row">
+            <div class="col-6 col-lg-3"><div class="perk"><i class="bi bi-truck"></i><div><strong>Free delivery</strong><small>On orders over Rs. 5,000</small></div></div></div>
+            <div class="col-6 col-lg-3"><div class="perk"><i class="bi bi-arrow-repeat"></i><div><strong>7-day returns</strong><small>Hassle-free exchanges</small></div></div></div>
+            <div class="col-6 col-lg-3"><div class="perk"><i class="bi bi-shield-lock"></i><div><strong>Secure payments</strong><small>Verified bank transfers</small></div></div></div>
+            <div class="col-6 col-lg-3"><div class="perk"><i class="bi bi-headset"></i><div><strong>Support 7 days</strong><small>We're here to help</small></div></div></div>
+        </div>
+    </div>
+</section>
+
+{% if categories %}
+<section class="section">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end">
+            <div><h2 class="section-title">Shop by category</h2><p class="section-sub">Find exactly what you're looking for</p></div>
+        </div>
+        <div class="row g-3">
+            {% for cat in categories %}
+                <div class="col-6 col-md-4 col-lg-2">
+                    <a class="cat-tile" href="{% url 'products:category' cat.slug %}">
+                        <span class="icon"><i class="bi {{ cat.icon }}"></i></span>
+                        <div class="fw-semibold">{{ cat.name }}</div>
+                        <small>{{ cat.product_count }} item{{ cat.product_count|pluralize }}</small>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if featured %}
+<section class="section bg-alt">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end">
+            <div><h2 class="section-title">Featured products</h2><p class="section-sub">Hand-picked favourites from our team</p></div>
+            <a href="{% url 'products:product_list' %}" class="fw-semibold mb-4">View all <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="row g-3 g-md-4">
+            {% for product in featured %}<div class="col-6 col-md-4 col-lg-3">{% include 'partials/product_card.html' %}</div>{% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if on_sale %}
+<section class="section">
+    <div class="container">
+        <div class="rounded-4 p-4 p-md-5 mb-4 text-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" style="background:linear-gradient(120deg,#4f46e5,#7c3aed)">
+            <div>
+                <span class="badge bg-white text-danger mb-2"><i class="bi bi-lightning-charge-fill"></i> Limited time</span>
+                <h2 class="fw-bold mb-1">Hot deals of the week</h2>
+                <p class="mb-0 opacity-75">Save up to 40% on selected items. Plus 10% extra with code WELCOME10.</p>
+            </div>
+            <a href="{% url 'products:product_list' %}?on_sale=1" class="btn btn-light btn-lg text-primary">Shop the sale</a>
+        </div>
+        <div class="row g-3 g-md-4">
+            {% for product in on_sale %}<div class="col-6 col-md-4 col-lg-3">{% include 'partials/product_card.html' %}</div>{% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section class="section {% if on_sale %}bg-alt{% endif %}">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end">
+            <div><h2 class="section-title">New arrivals</h2><p class="section-sub">The latest additions to our store</p></div>
+            <a href="{% url 'products:product_list' %}?sort=newest" class="fw-semibold mb-4">View all <i class="bi bi-arrow-right"></i></a>
+        </div>
+        {% if new_arrivals %}
+            <div class="row g-3 g-md-4">
+                {% for product in new_arrivals %}<div class="col-6 col-md-4 col-lg-3">{% include 'partials/product_card.html' %}</div>{% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state"><i class="bi bi-box-seam"></i>No products yet. Staff can add products from the dashboard.</div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="section pt-0">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-md-4"><div class="panel h-100"><i class="bi bi-chat-quote fs-2 text-primary"></i><p class="mt-2 mb-2">"Ordered on Monday, arrived Wednesday. Packaging was perfect and the quality is great."</p><small class="text-muted fw-semibold">Ayesha K., Lahore</small></div></div>
+            <div class="col-md-4"><div class="panel h-100"><i class="bi bi-chat-quote fs-2 text-primary"></i><p class="mt-2 mb-2">"Payment verification was quick and I could track my order at every step. Recommended."</p><small class="text-muted fw-semibold">Bilal R., Karachi</small></div></div>
+            <div class="col-md-4"><div class="panel h-100"><i class="bi bi-chat-quote fs-2 text-primary"></i><p class="mt-2 mb-2">"Best prices I found online and the coupon worked instantly at checkout."</p><small class="text-muted fw-semibold">Hina S., Islamabad</small></div></div>
+        </div>
+    </div>
+</section>
 {% endblock %}

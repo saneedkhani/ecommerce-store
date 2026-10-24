@@ -7,7 +7,7 @@ from accounts.api_views import RegisterView, LoginView, LogoutView, MeView
 from cart.api_views import CartView, CartItemViewSet
 from orders.api_views import OrderViewSet
 from payments.api_views import PaymentViewSet
-from products.api_views import ProductViewSet
+from products.api_views import CategoryViewSet, ProductViewSet, WishlistViewSet
 
 class PublicAPIRootView(DefaultRouter.APIRootView):
     """List of API endpoints (open to everyone, the endpoints themselves still check permissions)."""
@@ -16,7 +16,9 @@ class PublicAPIRootView(DefaultRouter.APIRootView):
 
 router = DefaultRouter()
 router.APIRootView = PublicAPIRootView
+router.register('categories', CategoryViewSet, basename='category')
 router.register('products', ProductViewSet, basename='product')
+router.register('wishlist', WishlistViewSet, basename='wishlist')
 router.register('cart/items', CartItemViewSet, basename='cart-item')
 router.register('orders', OrderViewSet, basename='order')
 router.register('payments', PaymentViewSet, basename='payment')

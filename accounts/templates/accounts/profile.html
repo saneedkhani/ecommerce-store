@@ -1,33 +1,58 @@
 {% extends 'base.html' %}
-{% block title %}My Profile{% endblock %}
+{% block title %}My account{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card p-4">
-            <div class="text-center mb-4">
-                <i class="bi bi-person-circle" style="font-size:4rem; color:#ff4d6d;"></i>
-                <h2 class="fw-bold mt-2">{{ user.username }}</h2>
+<div class="page-head">
+    <div class="container d-flex align-items-center gap-3">
+        {% if user.profile_picture %}<img src="{{ user.profile_picture.url }}" class="avatar" style="width:64px;height:64px" alt="">
+        {% else %}<span class="avatar" style="width:64px;height:64px;font-size:1.6rem">{{ user.username|first|upper }}</span>{% endif %}
+        <div>
+            <h1 class="h3 fw-bold mb-0">Hi, {{ user.first_name|default:user.username }}</h1>
+            <p class="text-muted mb-0">Member since {{ user.date_joined|date:"F Y" }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3"><a href="{% url 'orders:order_history' %}" class="stat-card d-block text-dark"><span class="icon icon-brand"><i class="bi bi-box-seam"></i></span><div class="value">{{ order_count }}</div><div class="label">Orders</div></a></div>
+        <div class="col-6 col-lg-3"><div class="stat-card"><span class="icon icon-green"><i class="bi bi-wallet2"></i></span><div class="value">{{ total_spent|money }}</div><div class="label">Total spent</div></div></div>
+        <div class="col-6 col-lg-3"><a href="{% url 'products:wishlist' %}" class="stat-card d-block text-dark"><span class="icon icon-red"><i class="bi bi-heart"></i></span><div class="value">{{ wishlist_count }}</div><div class="label">Wishlist</div></a></div>
+        <div class="col-6 col-lg-3"><div class="stat-card"><span class="icon icon-amber"><i class="bi bi-star"></i></span><div class="value">{{ review_count }}</div><div class="label">Reviews</div></div></div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="panel">
+                <div class="panel-title">Profile &amp; delivery details</div>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label">First name</label>{{ form.first_name }}</div>
+                        <div class="col-md-6"><label class="form-label">Last name</label>{{ form.last_name }}</div>
+                        <div class="col-md-6"><label class="form-label">Email</label>{{ form.email }}<div class="text-danger small">{{ form.email.errors|striptags }}</div></div>
+                        <div class="col-md-6"><label class="form-label">Phone number</label>{{ form.phone_number }}</div>
+                        <div class="col-12"><label class="form-label">Default delivery address</label>{{ form.address }}</div>
+                        <div class="col-12"><label class="form-label">Profile picture</label>{{ form.profile_picture }}</div>
+                    </div>
+                    <button class="btn btn-primary mt-4" type="submit">Save changes</button>
+                </form>
             </div>
-
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
-                    <span class="text-secondary">Email</span>
-                    <span>{{ user.email|default:"—" }}</span>
-                </li>
-                <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
-                    <span class="text-secondary">Phone</span>
-                    <span>{{ user.phone_number|default:"—" }}</span>
-                </li>
-                <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
-                    <span class="text-secondary">Address</span>
-                    <span>{{ user.address|default:"—" }}</span>
-                </li>
-            </ul>
-
-            <div class="d-flex gap-2 mt-4">
-                <a href="{% url 'orders:order_history' %}" class="btn btn-outline-light w-100">My Orders</a>
-                <a href="{% url 'accounts:logout' %}" class="btn w-100" style="background-color:#ff4d6d; color:white;">Logout</a>
+        </div>
+        <div class="col-lg-5">
+            <div class="panel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="panel-title mb-0">Recent orders</span>
+                    <a href="{% url 'orders:order_history' %}" class="small fw-semibold">View all</a>
+                </div>
+                {% for order in recent_orders %}
+                    <a href="{% url 'orders:order_detail' order.id %}" class="d-flex justify-content-between align-items-center py-2 border-bottom text-dark">
+                        <div><div class="fw-semibold">#{{ order.id }}</div><small class="text-muted">{{ order.created_at|date:"M j, Y" }}</small></div>
+                        <div class="text-end"><div class="fw-semibold small">{{ order.total_price|money }}</div><span class="status status-{{ order.status_color }}">{{ order.get_status_display }}</span></div>
+                    </a>
+                {% empty %}
+                    <p class="text-muted small mb-0">No orders yet. <a href="{% url 'products:product_list' %}">Start shopping</a></p>
+                {% endfor %}
             </div>
         </div>
     </div>

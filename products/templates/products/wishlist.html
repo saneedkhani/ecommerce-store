@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}My wishlist{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li><li class="breadcrumb-item active">Wishlist</li></ol></nav>
+        <h1 class="h3 fw-bold mb-1">My wishlist</h1>
+        <p class="text-muted mb-0">{{ items|length }} saved item{{ items|length|pluralize }}</p>
+    </div>
+</div>
+<div class="container py-5">
+    {% if items %}
+        <div class="row g-3 g-md-4">
+            {% for item in items %}{% with product=item.product %}<div class="col-6 col-md-4 col-lg-3">{% include 'partials/product_card.html' %}</div>{% endwith %}{% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state panel">
+            <i class="bi bi-heart"></i>
+            <h5 class="text-dark">Your wishlist is empty</h5>
+            <p>Tap the heart on any product to save it for later.</p>
+            <a class="btn btn-primary" href="{% url 'products:product_list' %}">Start shopping</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

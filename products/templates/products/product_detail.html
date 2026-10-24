@@ -1,26 +1,155 @@
 {% extends 'base.html' %}
 {% block title %}{{ product.name }}{% endblock %}
+{% block meta_description %}{{ product.description|truncatechars:150 }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-5">
-        {% if product.image %}
-            <img src="{{ product.image.url }}" class="img-fluid rounded-3" style="border:1px solid #2a2a35;">
-        {% endif %}
-    </div>
-    <div class="col-md-7">
-        <h1 class="fw-bold">{{ product.name }}</h1>
-        <h3 style="color:#ff4d6d;">Rs. {{ product.price }}</h3>
-        <p class="text-secondary">{{ product.description }}</p>
-        <p><span class="badge bg-secondary">Stock: {{ product.stock }}</span></p>
+<div class="container py-4 py-lg-5">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'products:product_list' %}">Shop</a></li>
+        {% if product.category %}<li class="breadcrumb-item"><a href="{% url 'products:category' product.category.slug %}">{{ product.category.name }}</a></li>{% endif %}
+        <li class="breadcrumb-item active text-truncate" style="max-width:240px">{{ product.name }}</li>
+    </ol></nav>
 
-        {% if user.is_authenticated %}
-            <a href="{% url 'cart:add_to_cart' product.id %}" class="btn btn-lg mt-2" style="background-color:#ff4d6d; color:white;">
-                <i class="bi bi-cart-plus"></i> Add to Cart
-            </a>
-        {% else %}
-            <a href="{% url 'accounts:login' %}" class="btn btn-outline-light mt-2">Login to buy</a>
-        {% endif %}
+    <div class="row g-4 g-lg-5 mt-1">
+        <div class="col-lg-6">
+            <div class="gallery-main position-relative">
+                {% if product.on_sale %}<span class="badge-sale" style="font-size:.9rem">-{{ product.discount_percent }}% OFF</span>{% endif %}
+                {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">
+                {% else %}<div class="img-placeholder" style="font-size:5rem"><i class="bi {{ product.category.icon|default:'bi-bag' }}"></i></div>{% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            {% if product.category %}<a href="{% url 'products:category' product.category.slug %}" class="text-uppercase small fw-bold text-muted">{{ product.category.name }}</a>{% endif %}
+            <h1 class="h2 fw-bold mt-1 mb-2">{{ product.name }}</h1>
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <span class="stars fs-6">{% for s in product.rating|stars %}<i class="bi bi-star{% if s == 'full' %}-fill{% elif s == 'half' %}-half{% endif %}"></i>{% endfor %}</span>
+                <span class="fw-semibold">{{ product.rating }}</span>
+                <a href="#reviews" class="text-muted small">({{ product.reviews_total }} review{{ product.reviews_total|pluralize }})</a>
+            </div>
+
+            <div class="d-flex align-items-baseline gap-2 mb-3">
+                <span class="detail-price {% if product.on_sale %}text-danger{% endif %}">{{ product.current_price|money }}</span>
+                {% if product.on_sale %}
+                    <span class="price-old fs-5">{{ product.price|money }}</span>
+                    <span class="badge bg-danger-subtle text-danger">You save {{ product.savings|money }}</span>
+                {% endif %}
+            </div>
+
+            {% if product.stock > 5 %}<span class="stock-pill in"><i class="bi bi-check-circle-fill"></i> In stock</span>
+            {% elif product.stock > 0 %}<span class="stock-pill low"><i class="bi bi-exclamation-circle-fill"></i> Only {{ product.stock }} left, order soon</span>
+            {% else %}<span class="stock-pill out"><i class="bi bi-x-circle-fill"></i> Out of stock</span>{% endif %}
+
+            <p class="text-muted mt-3" style="white-space:pre-line">{{ product.description|default:"No description yet."|truncatewords:45 }}</p>
+
+            {% if product.in_stock %}
+                <form method="post" action="{% url 'cart:add_to_cart' product.id %}" class="mt-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <div class="qty-input">
+                            <button type="button" data-qty-step="-1" aria-label="Decrease">−</button>
+                            <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" aria-label="Quantity">
+                            <button type="button" data-qty-step="1" aria-label="Increase">+</button>
+                        </div>
+                        <button class="btn btn-primary btn-lg flex-grow-1" type="submit"><i class="bi bi-bag-plus me-1"></i> Add to cart</button>
+                        <button class="btn btn-dark btn-lg flex-grow-1" type="submit" name="buy_now" value="1">Buy now</button>
+                    </div>
+                </form>
+            {% endif %}
+
+            <button type="button" class="btn btn-light mt-2 {% if product.id in wishlist_ids %}active text-danger{% endif %}"
+                    data-wishlist-url="{% url 'products:toggle_wishlist' product.id %}"
+                    {% if not user.is_authenticated %}data-login-url="{% url 'accounts:login' %}?next={{ request.path|urlencode }}"{% endif %}>
+                <i class="bi {% if product.id in wishlist_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                <span class="wish-label ms-1">{% if product.id in wishlist_ids %}In wishlist{% else %}Add to wishlist{% endif %}</span>
+            </button>
+
+            <ul class="info-list mt-4 pt-3 border-top">
+                <li><i class="bi bi-truck"></i> Free delivery on orders over Rs. 5,000. Usually ships within 24 hours</li>
+                <li><i class="bi bi-arrow-repeat"></i> 7-day easy returns and exchanges</li>
+                <li><i class="bi bi-shield-check"></i> Secure bank-transfer payment, verified by our team</li>
+            </ul>
+        </div>
     </div>
+
+    <div class="mt-5" id="reviews">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-desc" type="button">Description</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-reviews" type="button">Reviews ({{ product.reviews_total }})</button></li>
+        </ul>
+        <div class="tab-content pt-4">
+            <div class="tab-pane fade show active" id="tab-desc">
+                <p class="text-muted" style="white-space:pre-line;max-width:820px">{{ product.description|default:"No description yet." }}</p>
+            </div>
+            <div class="tab-pane fade" id="tab-reviews">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="panel">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <span class="display-5 fw-bold">{{ product.rating }}</span>
+                                <div>
+                                    <div class="stars fs-6">{% for s in product.rating|stars %}<i class="bi bi-star{% if s == 'full' %}-fill{% elif s == 'half' %}-half{% endif %}"></i>{% endfor %}</div>
+                                    <small class="text-muted">{{ product.reviews_total }} review{{ product.reviews_total|pluralize }}</small>
+                                </div>
+                            </div>
+                            {% for row in rating_breakdown %}
+                                <div class="d-flex align-items-center gap-2 small mb-1">
+                                    <span style="width:28px">{{ row.stars }}<i class="bi bi-star-fill text-warning ms-1" style="font-size:.7rem"></i></span>
+                                    <div class="rating-bar flex-grow-1"><span style="width:{{ row.percent }}%"></span></div>
+                                    <span class="text-muted" style="width:24px">{{ row.count }}</span>
+                                </div>
+                            {% endfor %}
+
+                            <hr>
+                            {% if review_form %}
+                                <h6 class="fw-bold">Write a review</h6>
+                                <form method="post" action="{% url 'products:add_review' product.id %}">
+                                    {% csrf_token %}
+                                    <div class="mb-2">{{ review_form.rating }}</div>
+                                    <div class="mb-2">{{ review_form.comment }}</div>
+                                    <button class="btn btn-primary w-100" type="submit">Submit review</button>
+                                </form>
+                            {% elif already_reviewed %}
+                                <p class="small text-muted mb-0"><i class="bi bi-check-circle text-success"></i> Thanks, you've reviewed this product.</p>
+                            {% elif user.is_authenticated %}
+                                <p class="small text-muted mb-0">Only customers who bought this product can leave a review (after payment is verified).</p>
+                            {% else %}
+                                <p class="small text-muted mb-0"><a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}">Log in</a> to review products you've bought.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        {% for review in reviews %}
+                            <div class="review d-flex gap-3">
+                                <span class="avatar">{{ review.user.username|first|upper }}</span>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>{{ review.user.first_name|default:review.user.username }}</strong>
+                                        <small class="text-muted">{{ review.created_at|date:"M j, Y" }}</small>
+                                    </div>
+                                    <div class="stars">{% for s in review.rating|stars %}<i class="bi bi-star{% if s == 'full' %}-fill{% endif %}"></i>{% endfor %}
+                                        <span class="badge bg-success-subtle text-success ms-2 fw-semibold">Verified purchase</span></div>
+                                    {% if review.comment %}<p class="mb-0 mt-2 text-muted">{{ review.comment }}</p>{% endif %}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="empty-state py-4"><i class="bi bi-chat-square-text"></i>No reviews yet. Be the first to review this product.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if related %}
+        <div class="mt-5">
+            <h2 class="section-title mb-3">You may also like</h2>
+            <div class="row g-3 g-md-4">
+                {% for product in related %}<div class="col-6 col-md-3">{% include 'partials/product_card.html' %}</div>{% endfor %}
+            </div>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

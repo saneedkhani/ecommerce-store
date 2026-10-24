@@ -1,98 +1,92 @@
-{% extends 'admin_base.html' %}
-{% block title %}Admin Dashboard{% endblock %}
+{% extends 'staff_base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
 
 {% block content %}
-<h1 class="fw-bold mb-4">Dashboard</h1>
-
-<div class="row g-4 mb-4">
-    <div class="col-md-3 col-6">
-        <div class="card p-3 text-center">
-            <i class="bi bi-box-seam fs-2" style="color:#ff4d6d;"></i>
-            <h3 class="fw-bold mt-2">{{ total_products }}</h3>
-            <p class="text-secondary mb-0">Products</p>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="card p-3 text-center">
-            <i class="bi bi-receipt fs-2" style="color:#ff4d6d;"></i>
-            <h3 class="fw-bold mt-2">{{ total_orders }}</h3>
-            <p class="text-secondary mb-0">Total Orders</p>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="card p-3 text-center">
-            <i class="bi bi-cash-coin fs-2" style="color:#4ade80;"></i>
-            <h3 class="fw-bold mt-2">Rs. {{ total_revenue }}</h3>
-            <p class="text-secondary mb-0">Revenue</p>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="card p-3 text-center">
-            <i class="bi bi-hourglass-split fs-2" style="color:#facc15;"></i>
-            <h3 class="fw-bold mt-2">{{ pending_payments }}</h3>
-            <p class="text-secondary mb-0">Pending Payments</p>
-        </div>
-    </div>
-</div>
-
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <a href="{% url 'products:add_product' %}" class="card p-4 text-center text-decoration-none text-white h-100 d-block">
-            <i class="bi bi-plus-circle fs-1" style="color:#ff4d6d;"></i>
-            <h5 class="mt-2 mb-0">Manage Products</h5>
-        </a>
-    </div>
-    <div class="col-md-4">
-        <a href="{% url 'payments:dashboard' %}" class="card p-4 text-center text-decoration-none text-white h-100 d-block">
-            <i class="bi bi-credit-card fs-1" style="color:#ff4d6d;"></i>
-            <h5 class="mt-2 mb-0">Payment Requests</h5>
-        </a>
-    </div>
-    <div class="col-md-4">
-        <a href="/admin/orders/order/" class="card p-4 text-center text-decoration-none text-white h-100 d-block">
-            <i class="bi bi-truck fs-1" style="color:#ff4d6d;"></i>
-            <h5 class="mt-2 mb-0">Manage Orders</h5>
-        </a>
-    </div>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="stat-card"><div class="d-flex justify-content-between"><span class="label">Revenue (paid)</span><span class="icon icon-green"><i class="bi bi-cash-stack"></i></span></div><div class="value">{{ total_revenue|money }}</div></div></div>
+    <div class="col-6 col-xl-3"><a href="{% url 'core:staff_orders' %}" class="stat-card d-block text-dark"><div class="d-flex justify-content-between"><span class="label">Total orders</span><span class="icon icon-brand"><i class="bi bi-receipt"></i></span></div><div class="value">{{ total_orders }}</div><small class="text-muted">{{ pending_orders }} pending</small></a></div>
+    <div class="col-6 col-xl-3"><a href="{% url 'payments:dashboard' %}?status=pending" class="stat-card d-block text-dark"><div class="d-flex justify-content-between"><span class="label">Payments to verify</span><span class="icon icon-amber"><i class="bi bi-hourglass-split"></i></span></div><div class="value">{{ pending_payments }}</div></a></div>
+    <div class="col-6 col-xl-3"><a href="{% url 'core:staff_products' %}" class="stat-card d-block text-dark"><div class="d-flex justify-content-between"><span class="label">Products</span><span class="icon icon-red"><i class="bi bi-box-seam"></i></span></div><div class="value">{{ total_products }}</div><small class="text-muted">{{ low_stock_products|length }} low on stock</small></a></div>
 </div>
 
 <div class="row g-4">
-    <div class="col-md-6">
-        <div class="card p-4">
-            <h5 class="mb-3">Recent Orders</h5>
-            <ul class="list-group list-group-flush">
-                {% for order in recent_orders %}
-                <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
-                    <span>#{{ order.id }} — {{ order.user.username }}</span>
-                    <span class="badge
-                        {% if order.status == 'delivered' %}bg-success
-                        {% elif order.status == 'cancelled' %}bg-danger
-                        {% elif order.status == 'processing' %}bg-warning text-dark
-                        {% else %}bg-secondary{% endif %}">
-                        {{ order.get_status_display }}
-                    </span>
-                </li>
-                {% empty %}
-                <li class="list-group-item bg-transparent text-secondary">No orders yet.</li>
-                {% endfor %}
-            </ul>
+    <div class="col-xl-8">
+        <div class="panel h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="panel-title mb-0">Revenue, last 7 days</span>
+                <span class="small text-muted">Paid orders only</span>
+            </div>
+            <canvas id="salesChart" height="110"></canvas>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="panel h-100">
+            <div class="panel-title">Best sellers</div>
+            {% for row in top_products %}
+                <div class="d-flex justify-content-between py-2 border-bottom small"><span class="text-truncate me-2">{{ forloop.counter }}. {{ row.product__name }}</span><strong>{{ row.sold }} sold</strong></div>
+            {% empty %}
+                <p class="text-muted small mb-0">No paid orders yet.</p>
+            {% endfor %}
         </div>
     </div>
 
-    <div class="col-md-6">
-        <div class="card p-4">
-            <h5 class="mb-3">Low Stock Alerts</h5>
-            <ul class="list-group list-group-flush">
-                {% for product in low_stock_products %}
-                <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
-                    <span>{{ product.name }}</span>
-                    <span class="badge bg-danger">{{ product.stock }} left</span>
-                </li>
-                {% empty %}
-                <li class="list-group-item bg-transparent text-secondary">All products well stocked.</li>
-                {% endfor %}
-            </ul>
+    <div class="col-xl-8">
+        <div class="panel p-0">
+            <div class="d-flex justify-content-between align-items-center p-3 pb-2">
+                <span class="panel-title mb-0">Recent orders</span>
+                <a href="{% url 'core:staff_orders' %}" class="small fw-semibold">View all</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-clean">
+                    <thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Total</th><th>Status</th></tr></thead>
+                    <tbody>
+                    {% for order in recent_orders %}
+                        <tr>
+                            <td class="fw-semibold">#{{ order.id }}</td>
+                            <td>{{ order.full_name }}<div class="small text-muted">@{{ order.user.username }}</div></td>
+                            <td class="text-muted small">{{ order.created_at|date:"M j, g:i A" }}</td>
+                            <td class="fw-semibold">{{ order.total_price|money }}</td>
+                            <td><span class="status status-{{ order.status_color }}">{{ order.get_status_display }}</span></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-4">No orders yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="panel">
+            <div class="panel-title">Low stock</div>
+            {% for product in low_stock_products %}
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <a href="{% url 'products:edit_product' product.id %}" class="small text-dark text-truncate me-2">{{ product.name }}</a>
+                    <span class="status {% if product.stock == 0 %}status-danger{% else %}status-warning{% endif %}">{{ product.stock }} left</span>
+                </div>
+            {% empty %}
+                <p class="text-muted small mb-0"><i class="bi bi-check-circle text-success"></i> All products are well stocked.</p>
+            {% endfor %}
+            <a href="{% url 'products:add_product' %}" class="btn btn-light btn-sm w-100 mt-3"><i class="bi bi-plus"></i> Restock products</a>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    new Chart(document.getElementById('salesChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{ label: 'Revenue (Rs.)', data: {{ chart_values|safe }}, backgroundColor: '#4f46e5', borderRadius: 8, maxBarThickness: 42 }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+        }
+    });
+</script>
 {% endblock %}

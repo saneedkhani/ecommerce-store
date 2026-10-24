@@ -1,4 +1,5 @@
 from django.db import transaction
+from orders.services import restock_order
 
 # statuses staff can set (a new payment starts as 'pending')
 STAFF_STATUSES = ['verified', 'rejected', 'not_received']
@@ -23,11 +24,7 @@ def set_payment_status(payment, new_status):
             order.status = 'processing'
         elif new_status == 'rejected' and order.status != 'cancelled':
             order.status = 'cancelled'
-            # put the items back in stock
-            for item in order.items.select_related('product'):
-                if item.product:
-                    item.product.stock += item.quantity
-                    item.product.save(update_fields=['stock'])
+            restock_order(order)  # put the items back in stock
         order.save()
 
     return payment

@@ -84,7 +84,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.shop',
             ],
+            'builtins': ['core.templatetags.shop_tags'],
         },
     },
 ]
@@ -127,7 +129,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Karachi'
 
 USE_I18N = True
 
@@ -157,6 +159,13 @@ LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'core:home'
 LOGOUT_REDIRECT_URL = 'core:home'
 
+# Bank account shown to customers on the payment page (override in .env)
+STORE_BANK_DETAILS = {
+    'account_title': os.environ.get('STORE_ACCOUNT_TITLE', 'ShopWave Pvt Ltd'),
+    'account_number': os.environ.get('STORE_ACCOUNT_NUMBER', 'PK00XXXX0000000000000000'),
+    'bank_name': os.environ.get('STORE_BANK_NAME', 'Your Bank'),
+}
+
 
 #----------------- REST API -----------------#
 REST_FRAMEWORK = {
@@ -185,4 +194,9 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,  # separate request/response schemas so file uploads show correctly
+    'ENUM_NAME_OVERRIDES': {
+        'OrderStatusEnum': 'orders.models.Order.STATUS_CHOICES',
+        'PaymentStatusEnum': 'payments.models.Payment.STATUS_CHOICES',
+        'PaymentReviewStatusEnum': 'payments.services.STAFF_STATUSES',
+    },
 }

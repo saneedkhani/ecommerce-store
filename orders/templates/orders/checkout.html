@@ -2,39 +2,75 @@
 {% block title %}Checkout{% endblock %}
 
 {% block content %}
-<h1 class="fw-bold mb-4">Checkout</h1>
+<div class="page-head">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'cart:cart_detail' %}">Cart</a></li>
+            <li class="breadcrumb-item active">Checkout</li>
+        </ol></nav>
+        <h1 class="h3 fw-bold mb-0">Checkout</h1>
+    </div>
+</div>
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card p-4 mb-4">
-            <h4 class="mb-3">Shipping Details</h4>
-            <form method="post">
-                {% csrf_token %}
-                {% for field in form %}
-                    <div class="mb-3">
-                        <label class="form-label">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+<div class="container py-5">
+    <form method="post">
+        {% csrf_token %}
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="panel mb-4">
+                    <div class="panel-title"><span class="badge rounded-pill bg-primary me-2">1</span>Delivery details</div>
+                    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.full_name.id_for_label }}">Full name</label>
+                            {{ form.full_name }}<div class="text-danger small">{{ form.full_name.errors|striptags }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.phone_number.id_for_label }}">Phone number</label>
+                            {{ form.phone_number }}<div class="text-danger small">{{ form.phone_number.errors|striptags }}</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="{{ form.address.id_for_label }}">Delivery address</label>
+                            {{ form.address }}<div class="text-danger small">{{ form.address.errors|striptags }}</div>
+                            <small class="text-muted">Tip: save your address in <a href="{% url 'accounts:profile' %}">My account</a> to fill this in automatically.</small>
+                        </div>
                     </div>
-                {% endfor %}
-                <button type="submit" class="btn w-100" style="background-color:#ff4d6d; color:white;">Place Order</button>
-            </form>
-        </div>
-    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-title"><span class="badge rounded-pill bg-primary me-2">2</span>Payment method</div>
+                    <div class="border rounded-3 p-3 d-flex gap-3 align-items-start" style="border-color:var(--brand)!important;background:var(--brand-soft)">
+                        <i class="bi bi-bank fs-3 text-primary"></i>
+                        <div>
+                            <strong>Bank transfer</strong>
+                            <p class="small text-muted mb-0">After placing your order you'll see our bank details. Transfer the amount and upload the receipt. We verify it and ship your order.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <div class="col-md-6">
-        <div class="card p-4">
-            <h4 class="mb-3">Order Summary</h4>
-            <ul class="list-group list-group-flush mb-3">
-                {% for item in cart.items.all %}
-                <li class="list-group-item d-flex justify-content-between bg-transparent text-white border-secondary">
-                    <span>{{ item.product.name }} × {{ item.quantity }}</span>
-                    <span>Rs. {{ item.subtotal }}</span>
-                </li>
-                {% endfor %}
-            </ul>
-            <h5 class="text-end">Total: <span style="color:#ff4d6d;">Rs. {{ cart.total_price }}</span></h5>
+            <div class="col-lg-5">
+                <div class="panel position-sticky" style="top:140px">
+                    <div class="panel-title">Your order</div>
+                    {% for item in items %}
+                        <div class="d-flex gap-3 align-items-center mb-3">
+                            <div class="mini-thumb position-relative">
+                                {% if item.product.image %}<img src="{{ item.product.image.url }}" alt="">{% else %}<div class="img-placeholder fs-5"><i class="bi bi-bag"></i></div>{% endif %}
+                            </div>
+                            <div class="flex-grow-1 small"><div class="fw-semibold text-truncate" style="max-width:220px">{{ item.product.name }}</div><span class="text-muted">Qty {{ item.quantity }}</span></div>
+                            <strong class="small">{{ item.subtotal|money }}</strong>
+                        </div>
+                    {% endfor %}
+                    <hr>
+                    <div class="summary-row"><span>Subtotal</span><strong>{{ summary.subtotal|money }}</strong></div>
+                    {% if summary.coupon %}<div class="summary-row"><span class="text-success"><i class="bi bi-tag-fill"></i> {{ summary.coupon.code }}</span><strong class="text-success">−{{ summary.discount|money }}</strong></div>{% endif %}
+                    <div class="summary-row"><span>Delivery</span><strong class="text-success">Free</strong></div>
+                    <div class="summary-total"><span>Total</span><span>{{ summary.total|money }}</span></div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 mt-3"><i class="bi bi-lock-fill me-1"></i> Place order</button>
+                    <a href="{% url 'cart:cart_detail' %}" class="btn btn-link w-100 text-muted btn-sm mt-1">Back to cart</a>
+                </div>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 {% endblock %}

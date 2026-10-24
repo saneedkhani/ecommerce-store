@@ -1,0 +1,29 @@
+{% extends 'staff_base.html' %}
+{% block title %}Edit {{ product.name }}{% endblock %}
+{% block heading %}Edit product{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="panel">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% include 'partials/product_form_fields.html' %}
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                    <a href="{% url 'core:staff_products' %}" class="btn btn-light">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="panel text-center">
+            <div class="gallery-main mb-3">{% if product.image %}<img src="{{ product.image.url }}" alt="">{% else %}<div class="img-placeholder"><i class="bi bi-bag"></i></div>{% endif %}</div>
+            <a href="{% url 'products:product_detail' product.id %}" class="btn btn-light btn-sm w-100" target="_blank"><i class="bi bi-box-arrow-up-right"></i> View in store</a>
+            <form method="post" action="{% url 'products:delete_product' product.id %}" class="mt-2" onsubmit="return confirm('Delete this product? This cannot be undone.')">
+                {% csrf_token %}<button class="btn btn-outline-danger btn-sm w-100" type="submit"><i class="bi bi-trash3"></i> Delete product</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
