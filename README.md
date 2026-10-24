@@ -14,8 +14,9 @@ Built by **Saneed Ullah** as a portfolio project after completing the
 ### Customers
 - Sign up, log in, log out and view profile (custom user model with phone, address and profile picture)
 - Browse the product catalogue and view product details with images
-- Shopping cart: add items, change quantity, remove items, live total
+- Shopping cart: add items, change quantity, remove items, live total (quantities limited to available stock)
 - Checkout with delivery details; prices are saved per order item at the time of purchase
+- Stock is checked and deducted safely at checkout (database row locking), and restored if a payment is rejected
 - Order history and order detail pages with status tracking
   (`pending → processing → shipped → delivered` or `cancelled`)
 - Bank-transfer payment: submit a transaction reference and upload a payment screenshot
@@ -132,7 +133,7 @@ python manage.py runserver
 
 | Page | URL |
 |---|---|
-| Home | `/core/` |
+| Home | `/` |
 | Products | `/products/` |
 | Product detail | `/products/<id>/` |
 | Cart | `/cart/` |
@@ -140,7 +141,7 @@ python manage.py runserver
 | My orders | `/orders/history/` |
 | Sign up / Log in | `/accounts/signup/`, `/accounts/login/` |
 | Staff login | `/accounts/admin-login/` |
-| Staff dashboard | `/core/dashboard/` |
+| Staff dashboard | `/dashboard/` |
 | Add / restock products | `/products/add/` |
 | Payment requests | `/payments/dashboard/` |
 | Django admin | `/admin/` |
@@ -165,7 +166,6 @@ python manage.py runserver
 
 - [ ] REST API with Django REST Framework (products, cart, orders, token authentication)
 - [ ] Interactive API documentation (Swagger / OpenAPI)
-- [ ] Automatic stock deduction and stock checks at checkout
 - [ ] Unit tests for all apps
 - [ ] Product categories, search, filtering and pagination
 - [ ] Online card payments (Stripe test mode)

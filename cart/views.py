@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from products.models import Product
 from .models import Cart, CartItem
@@ -6,11 +7,18 @@ from .models import Cart, CartItem
 @login_required
 def add_to_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id)
+    if product.stock < 1:
+        messages.error(request, f'Sorry, "{product.name}" is out of stock.')
+        return redirect('products:product_detail', pk=product.id)
+
     cart, created = Cart.objects.get_or_create(user=request.user)
     item, created = CartItem.objects.get_or_create(cart=cart, product=product)
     if not created:
-        item.quantity += 1
-        item.save()
+        if item.quantity >= product.stock:
+            messages.warning(request, f'Only {product.stock} of "{product.name}" in stock.')
+        else:
+            item.quantity += 1
+            item.save()
     return redirect('cart:cart_detail')
 
 @login_required
@@ -28,20 +36,18 @@ def remove_from_cart(request, item_id):
 def update_quantity(request, item_id):
     item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
     if request.method == 'POST':
-        quantity = int(request.POST.get('quantity', 1))
+        try:
+            quantity = int(request.POST.get('quantity', 1))
+        except (TypeError, ValueError):
+            messages.error(request, 'Please enter a valid quantity.')
+            return redirect('cart:cart_detail')
+
         if quantity > 0:
+            if quantity > item.product.stock:
+                quantity = item.product.stock
+                messages.warning(request, f'Only {quantity} of "{item.product.name}" in stock.')
             item.quantity = quantity
             item.save()
         else:
             item.delete()
-    return redirect('cart:cart_detail')
-
-@login_required
-def add_to_cart(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
-    cart, created = Cart.objects.get_or_create(user=request.user)
-    item, created = CartItem.objects.get_or_create(cart=cart, product=product)
-    if not created:
-        item.quantity += 1
-        item.save()
     return redirect('cart:cart_detail')

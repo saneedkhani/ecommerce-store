@@ -1,5 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db import transaction
+from django.http import JsonResponse
 from orders.models import Order
 from .models import Payment
 from .forms import PaymentProofForm
@@ -13,6 +16,10 @@ BANK_DETAILS = {
 @login_required
 def submit_payment(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
+
+    # one payment per order: don't let the customer submit again
+    if Payment.objects.filter(order=order).exists():
+        return redirect('payments:payment_submitted', order_id=order.id)
 
     if request.method == 'POST':
         form = PaymentProofForm(request.POST, request.FILES)
@@ -36,9 +43,6 @@ def payment_submitted(request, order_id):
     return render(request, 'payments/payment_submitted.html', {'order': order})
 
 
-from django.contrib.admin.views.decorators import staff_member_required
-from django.http import JsonResponse
-
 @staff_member_required
 def payment_dashboard(request):
     payments = Payment.objects.all().order_by('-created_at')  # show ALL, not just pending
@@ -57,14 +61,21 @@ def update_payment_status(request, payment_id, new_status):
     valid_statuses = ['verified', 'rejected', 'not_received']
 
     if new_status in valid_statuses:
-        payment.status = new_status
-        payment.save()
+        with transaction.atomic():
+            payment.status = new_status
+            payment.save()
 
-        if new_status == 'verified':
-            payment.order.status = 'processing'
-        elif new_status == 'rejected':
-            payment.order.status = 'cancelled'
-        # not_received: leave order status as-is, staff still investigating
-        payment.order.save()
+            order = payment.order
+            if new_status == 'verified':
+                order.status = 'processing'
+            elif new_status == 'rejected' and order.status != 'cancelled':
+                order.status = 'cancelled'
+                # put the items back in stock
+                for item in order.items.select_related('product'):
+                    if item.product:
+                        item.product.stock += item.quantity
+                        item.product.save(update_fields=['stock'])
+            # not_received: leave order status as-is, staff still investigating
+            order.save()
 
     return redirect('payments:dashboard')

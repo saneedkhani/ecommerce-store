@@ -1,10 +1,10 @@
 from django.shortcuts import render, get_object_or_404,redirect
 from .models import Product
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from .forms import ProductForm, RestockForm
 
-@login_required
+@staff_member_required
 def add_or_restock_product(request):
     add_form = ProductForm(prefix='add')
     restock_form = RestockForm(prefix='restock')
