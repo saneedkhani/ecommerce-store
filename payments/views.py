@@ -1,11 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db import transaction
 from django.http import JsonResponse
 from orders.models import Order
 from .models import Payment
 from .forms import PaymentProofForm
+from .services import set_payment_status, STAFF_STATUSES
 
 BANK_DETAILS = {
     'account_title': 'Your Store Name',
@@ -58,24 +58,8 @@ def pending_count(request):
 @staff_member_required
 def update_payment_status(request, payment_id, new_status):
     payment = get_object_or_404(Payment, id=payment_id)
-    valid_statuses = ['verified', 'rejected', 'not_received']
 
-    if new_status in valid_statuses:
-        with transaction.atomic():
-            payment.status = new_status
-            payment.save()
-
-            order = payment.order
-            if new_status == 'verified':
-                order.status = 'processing'
-            elif new_status == 'rejected' and order.status != 'cancelled':
-                order.status = 'cancelled'
-                # put the items back in stock
-                for item in order.items.select_related('product'):
-                    if item.product:
-                        item.product.stock += item.quantity
-                        item.product.save(update_fields=['stock'])
-            # not_received: leave order status as-is, staff still investigating
-            order.save()
+    if new_status in STAFF_STATUSES:
+        set_payment_status(payment, new_status)
 
     return redirect('payments:dashboard')
