@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="text-center py-5 mb-5 rounded-4" style="background: linear-gradient(135deg, #1a1a22, #2a1520); border:1px solid #2a2a35;">
+    <h1 class="display-4 fw-bold">Welcome to <span style="color:#ff4d6d;">ShopWave</span></h1>
+    <p class="text-secondary fs-5">Discover products you'll love, delivered to your door.</p>
+    <a href="{% url 'products:product_list' %}" class="btn btn-lg mt-3" style="background-color:#ff4d6d; color:white;">
+        Shop Now <i class="bi bi-arrow-right"></i>
+    </a>
+</div>
+
+<h2 class="fw-bold mb-4">Featured Products</h2>
+<div class="row g-4">
+    {% for product in products %}
+    <div class="col-6 col-md-4 col-lg-3">
+        <div class="card h-100 product-card">
+            <a href="{% url 'products:product_detail' product.pk %}">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                {% endif %}
+            </a>
+            <div class="card-body">
+                <h6 class="card-title text-truncate">{{ product.name }}</h6>
+                <p class="fw-bold mb-0" style="color:#ff4d6d;">Rs. {{ product.price }}</p>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-secondary">No products yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

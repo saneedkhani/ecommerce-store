@@ -1,0 +1,76 @@
+:root {
+    --accent: #ff4d6d;
+    --accent-hover: #ff2e55;
+}
+
+body {
+    background-color: #0d0d12;
+    color: #e4e4e7;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+a:hover {
+    color: var(--accent-hover);
+}
+
+.btn-primary, .btn-accent {
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+.btn-primary:hover, .btn-accent:hover {
+    background-color: var(--accent-hover);
+    border-color: var(--accent-hover);
+}
+
+.card {
+    background-color: #1a1a22;
+    border: 1px solid #2a2a35;
+    border-radius: 12px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(255, 77, 109, 0.15);
+}
+
+
+.product-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+}
+
+.product-card img {
+    border-radius: 10px 10px 0 0;
+    height: 220px;
+    object-fit: cover;
+    width: 100%;
+    display: block;
+}
+
+
+.badge {
+    font-size: 0.7rem;
+}
+
+table {
+    color: #e4e4e7;
+}
+
+input[type=text], input[type=password], input[type=email], input[type=number], textarea, select {
+    background-color: #1a1a22 !important;
+    color: #e4e4e7 !important;
+    border: 1px solid #2a2a35 !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    width: 100%;
+}

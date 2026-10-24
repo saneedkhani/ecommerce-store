@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}My Orders{% endblock %}
+
+{% block content %}
+<h1 class="fw-bold mb-4">My Orders</h1>
+
+{% if orders %}
+<div class="table-responsive">
+<table class="table table-dark table-hover align-middle">
+    <thead>
+        <tr><th>Order #</th><th>Status</th><th>Total</th><th>Date</th><th></th></tr>
+    </thead>
+    <tbody>
+    {% for order in orders %}
+    <tr>
+        <td>#{{ order.id }}</td>
+        <td>
+            <span class="badge
+                {% if order.status == 'delivered' %}bg-success
+                {% elif order.status == 'cancelled' %}bg-danger
+                {% elif order.status == 'processing' %}bg-warning text-dark
+                {% else %}bg-secondary{% endif %}">
+                {{ order.get_status_display }}
+            </span>
+        </td>
+        <td>Rs. {{ order.total_price }}</td>
+        <td>{{ order.created_at|date:"M d, Y" }}</td>
+        <td><a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-outline-light">View</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p class="text-secondary">No orders yet. <a href="{% url 'products:product_list' %}">Start shopping →</a></p>
+{% endif %}
+{% endblock %}

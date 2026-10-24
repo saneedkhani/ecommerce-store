@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Your Cart{% endblock %}
+
+{% block content %}
+<h1 class="fw-bold mb-4">Your Cart</h1>
+
+{% if cart.items.all %}
+<div class="table-responsive">
+<table class="table table-dark table-hover align-middle">
+    <thead>
+        <tr><th>Product</th><th>Price</th><th>Quantity</th><th>Subtotal</th><th></th></tr>
+    </thead>
+    <tbody>
+    {% for item in cart.items.all %}
+    <tr>
+        <td>{{ item.product.name }}</td>
+        <td>Rs. {{ item.product.price }}</td>
+        <td>
+            <form method="post" action="{% url 'cart:update_quantity' item.id %}" class="d-flex gap-2">
+                {% csrf_token %}
+                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control form-control-sm" style="width:70px;">
+                <button type="submit" class="btn btn-sm btn-outline-light">Update</button>
+            </form>
+        </td>
+        <td>Rs. {{ item.subtotal }}</td>
+        <td><a href="{% url 'cart:remove_from_cart' item.id %}" class="btn btn-sm btn-outline-danger">Remove</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+<div class="text-end">
+    <h4>Total: <span style="color:#ff4d6d;">Rs. {{ cart.total_price }}</span></h4>
+    <a href="{% url 'orders:checkout' %}" class="btn btn-lg mt-2" style="background-color:#ff4d6d; color:white;">Proceed to Checkout</a>
+</div>
+{% else %}
+<p class="text-secondary">Your cart is empty.</p>
+{% endif %}
+{% endblock %}

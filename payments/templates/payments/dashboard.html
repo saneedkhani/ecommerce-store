@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Payment Requests{% endblock %}
+
+{% block content %}
+<h1 class="fw-bold mb-4">Payment Requests</h1>
+
+<div class="table-responsive">
+<table class="table table-dark table-hover align-middle">
+    <thead>
+        <tr><th>#</th><th>Order</th><th>Customer</th><th>Amount</th><th>Reference</th><th>Proof</th><th>Status</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+    {% for payment in payments %}
+    <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>#{{ payment.order.id }}</td>
+        <td>{{ payment.user.username }}</td>
+        <td>Rs. {{ payment.order.total_price }}</td>
+        <td>{{ payment.bank_reference }}</td>
+        <td>
+            {% if payment.proof_screenshot %}
+                <a href="{{ payment.proof_screenshot.url }}" target="_blank" class="btn btn-sm btn-outline-light">View</a>
+            {% else %}
+                <span class="text-secondary">—</span>
+            {% endif %}
+        </td>
+        <td>
+            <span class="badge
+                {% if payment.status == 'verified' %}bg-success
+                {% elif payment.status == 'rejected' %}bg-danger
+                {% elif payment.status == 'not_received' %}bg-secondary
+                {% else %}bg-warning text-dark{% endif %}">
+                {{ payment.get_status_display }}
+            </span>
+        </td>
+        <td>
+            {% if payment.status == 'pending' %}
+                <a href="{% url 'payments:update_status' payment.id 'verified' %}" class="btn btn-sm btn-success mb-1">Verify</a>
+                <a href="{% url 'payments:update_status' payment.id 'rejected' %}" class="btn btn-sm btn-danger mb-1">Reject</a>
+                <a href="{% url 'payments:update_status' payment.id 'not_received' %}" class="btn btn-sm btn-outline-light mb-1">Not Received</a>
+            {% else %}
+                <a href="{% url 'payments:update_status' payment.id 'verified' %}" class="btn btn-sm btn-success mb-1">Verify</a>
+                <a href="{% url 'payments:update_status' payment.id 'rejected' %}" class="btn btn-sm btn-danger mb-1">Reject</a>
+                <a href="{% url 'payments:update_status' payment.id 'not_received' %}" class="btn btn-sm btn-outline-light mb-1">Not Received</a>
+            {% endif %}
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="8" class="text-center text-secondary">No payment requests yet.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

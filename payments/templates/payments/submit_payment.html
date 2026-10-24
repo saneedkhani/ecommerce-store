@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Complete Payment{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card p-4">
+            <h2 class="fw-bold mb-3">Complete Your Payment</h2>
+
+            <div class="p-3 mb-4 rounded-3" style="background-color:#1a1a22; border:1px solid #2a2a35;">
+                <p class="mb-1"><strong>Account Title:</strong> {{ bank_details.account_title }}</p>
+                <p class="mb-1"><strong>Account Number:</strong> {{ bank_details.account_number }}</p>
+                <p class="mb-1"><strong>Bank:</strong> {{ bank_details.bank_name }}</p>
+                <p class="mb-0"><strong>Amount:</strong> <span style="color:#ff4d6d;">Rs. {{ order.total_price }}</span></p>
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn w-100" style="background-color:#ff4d6d; color:white;">Submit Payment Proof</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

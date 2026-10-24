@@ -1,0 +1,98 @@
+{% extends 'admin_base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="fw-bold mb-4">Dashboard</h1>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="card p-3 text-center">
+            <i class="bi bi-box-seam fs-2" style="color:#ff4d6d;"></i>
+            <h3 class="fw-bold mt-2">{{ total_products }}</h3>
+            <p class="text-secondary mb-0">Products</p>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card p-3 text-center">
+            <i class="bi bi-receipt fs-2" style="color:#ff4d6d;"></i>
+            <h3 class="fw-bold mt-2">{{ total_orders }}</h3>
+            <p class="text-secondary mb-0">Total Orders</p>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card p-3 text-center">
+            <i class="bi bi-cash-coin fs-2" style="color:#4ade80;"></i>
+            <h3 class="fw-bold mt-2">Rs. {{ total_revenue }}</h3>
+            <p class="text-secondary mb-0">Revenue</p>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card p-3 text-center">
+            <i class="bi bi-hourglass-split fs-2" style="color:#facc15;"></i>
+            <h3 class="fw-bold mt-2">{{ pending_payments }}</h3>
+            <p class="text-secondary mb-0">Pending Payments</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <a href="{% url 'products:add_product' %}" class="card p-4 text-center text-decoration-none text-white h-100 d-block">
+            <i class="bi bi-plus-circle fs-1" style="color:#ff4d6d;"></i>
+            <h5 class="mt-2 mb-0">Manage Products</h5>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'payments:dashboard' %}" class="card p-4 text-center text-decoration-none text-white h-100 d-block">
+            <i class="bi bi-credit-card fs-1" style="color:#ff4d6d;"></i>
+            <h5 class="mt-2 mb-0">Payment Requests</h5>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="/admin/orders/order/" class="card p-4 text-center text-decoration-none text-white h-100 d-block">
+            <i class="bi bi-truck fs-1" style="color:#ff4d6d;"></i>
+            <h5 class="mt-2 mb-0">Manage Orders</h5>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h5 class="mb-3">Recent Orders</h5>
+            <ul class="list-group list-group-flush">
+                {% for order in recent_orders %}
+                <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
+                    <span>#{{ order.id }} — {{ order.user.username }}</span>
+                    <span class="badge
+                        {% if order.status == 'delivered' %}bg-success
+                        {% elif order.status == 'cancelled' %}bg-danger
+                        {% elif order.status == 'processing' %}bg-warning text-dark
+                        {% else %}bg-secondary{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </li>
+                {% empty %}
+                <li class="list-group-item bg-transparent text-secondary">No orders yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h5 class="mb-3">Low Stock Alerts</h5>
+            <ul class="list-group list-group-flush">
+                {% for product in low_stock_products %}
+                <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
+                    <span>{{ product.name }}</span>
+                    <span class="badge bg-danger">{{ product.stock }} left</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item bg-transparent text-secondary">All products well stocked.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
